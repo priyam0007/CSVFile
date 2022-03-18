@@ -1,20 +1,25 @@
 package com.blz.program;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
+
+import com.opencsv.CSVWriter;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
 public class AddressBookService {
 	ArrayList<Person> list = new ArrayList<>();
@@ -232,34 +237,34 @@ public class AddressBookService {
 	}
 
 	public void getNumberOfContacts() {
-		System.out.print("Enter City Name Or State Name To Get The Count Of Contacts : ");
-		String countContacts = sc.next();
-		int totalCount = 0;
-		for (int i = 0; i < list.size(); i++) {
-			if (list.get(i).getCity().equals(countContacts) || list.get(i).getState().equals(countContacts)) {
-				Person personDetails = list.get(i);
-				System.out.println(personDetails);
-				totalCount++;
-			}
-		}
-		System.out.println("\nTotal number of contacts present in " + countContacts + " is : " + totalCount);
-	}
+	        System.out.print("Enter City Name Or State Name To Get The Count Of Contacts : ");
+	        String countContacts = sc.next();
+	        int totalCount = 0;
+	        for (int i = 0; i < list.size(); i++) {
+	            if (list.get(i).getCity().equals(countContacts) || list.get(i).getState().equals(countContacts)) {
+	                Person personDetails = list.get(i);
+	                System.out.println(personDetails);
+	                totalCount++;
+	            }
+	        }
+	        System.out.println("\nTotal number of contacts present in " + countContacts + " is : " + totalCount);
+	    }
 
 	public void sortContactByFirstName() {
-		contacts.keySet().forEach((String name) -> {
-			contacts.get(name).stream().sorted(Comparator.comparing(Person::getFirstName)).collect(Collectors.toList())
-					.forEach(person -> System.out.println(person.toString()));
-		});
-	}
+	        contacts.keySet().forEach((String name) -> {
+	            contacts.get(name).stream().sorted(Comparator.comparing(Person::getFirstName)).collect(Collectors.toList())
+	                    .forEach(person -> System.out.println(person.toString()));
+	        });
+	    }
 
-	public void sortByZipCode() {
-		contacts.keySet().forEach((String key) -> {
-			contacts.get(key).stream().sorted(Comparator.comparing(Person::getZipCode)).collect(Collectors.toList())
-					.forEach(person -> System.out.println(person.toString()));
-		});
-	}
+	    public void sortByZipCode() {
+	        contacts.keySet().forEach((String key) -> {
+	            contacts.get(key).stream().sorted(Comparator.comparing(Person::getZipCode)).collect(Collectors.toList())
+	                    .forEach(person -> System.out.println(person.toString()));
+	        });
+	    }
 
-	public void displayContacts() {
+	    public void displayContacts() {
 //	        for(Person element : list)
 //	        {
 //	            if(element != null)
@@ -268,152 +273,181 @@ public class AddressBookService {
 //	            }
 //	        }
 
-		System.out.println(contacts);
+	        System.out.println(contacts);
+	    }
+
+	    public void fileCreate() {
+	        System.out.println("Enter the file name to creat");
+	        String filename = sc.next();
+	        File myfile = new File(filename);
+	        try {
+	            myfile.createNewFile();
+	        } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            System.out.println("Unable to create this file ");
+	            e.printStackTrace();
+	        }
+
+
+	    }
+
+	    public void fileWrite() {
+	        System.out.println("Enter the file name to in which you want to write");
+	        String filename = sc.next();
+	        try {
+	            FileWriter fileWriter = new FileWriter(filename);
+	            for (Person str : list) {
+	                fileWriter.write(str + System.lineSeparator());
+	            }
+	            fileWriter.close();
+	        } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+	        }
+
+	    }
+
+	    public void fileReader() {
+	        System.out.println("Enter the file name to in which you want to Read");
+	        String filename = sc.next();
+	        File myfile = new File(filename);
+	        try {
+	            Scanner s = new Scanner(myfile);
+	            while(s.hasNextLine()) {
+	                String Line = s.nextLine();
+	                System.out.println(Line);
+	            }
+
+	        } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+	        }
+
+	    }
+
+	    public void writeToCsv()
+	    {
+	        try
+	        {
+	            File file = new File(FILE_PATH);
+	            Writer writer = new FileWriter(file);
+	            StatefulBeanToCsv<Person> beanToCsv = new StatefulBeanToCsvBuilder<Person>(writer).withQuotechar(CSVWriter.NO_QUOTE_CHARACTER).build();
+	            List<Person> ContactList = new ArrayList<>();
+	            contacts.entrySet().stream()
+	                    .map(books->books.getKey())
+	                    .map(bookNames->{
+	                        return contacts.get(bookNames);
+	                    }).forEach(contacts ->{
+	                        ContactList.addAll((contacts));
+	                    });
+	            beanToCsv.write(ContactList);
+	            writer.close();
+	        }
+	        catch (CsvDataTypeMismatchException e)
+	        {
+	            e.printStackTrace();
+	        }
+	        catch (CsvRequiredFieldEmptyException e)
+	        {
+	            e.printStackTrace();
+	        }
+	        catch (IOException e)
+	        {
+	            e.printStackTrace();
+	        }
+	    }
+
+	    public void readFromCsvFile()
+	    {
+	        Reader reader;
+	        try {
+	            File file = new File(FILE_PATH);
+	            Reader read = new FileReader(file);
+	            CsvToBean csvToBean = new CsvToBeanBuilder(read)
+	                    .withType(Person.class)
+	                    .withIgnoreLeadingWhiteSpace(true)
+	                    .build();
+	            List<Person> contacts = csvToBean.parse();
+
+	            for(Person contact: contacts) {
+	                System.out.println("Name : " + contact.getFirstName()+" "+contact.getLastName());
+	                System.out.println("Email : " + contact.getEmailId());
+	                System.out.println("PhoneNo : " + contact.getPhoneNumber());
+	                System.out.println("Address : " + contact.getAddress());
+	                System.out.println("State : " + contact.getState());
+	                System.out.println("City : " + contact.getCity());
+	                System.out.println("Zip : " + contact.getZipCode());
+	                System.out.println("==========================");
+	            }
+	        }
+	        catch (IOException e)
+	        {
+	            e.printStackTrace();
+	        }
+	    }
+
+	    public void writeToJson()
+	    {
+	        List<Person> contact = getContentOfCsv();
+	        Gson gson = new Gson();
+	        String json = gson.toJson(contact);
+	        try
+	        {
+	            File file = new File(FILE_PATH1);
+	            FileWriter writer = new FileWriter(file);
+	            writer.write(json);
+	            writer.close();
+	            System.out.println("Written sucessfully");
+	        }
+	        catch (IOException e)
+	        {
+	            e.printStackTrace();
+	        }
+	    }
+
+	    public void readFromJson()
+	    {
+	        try
+	        {
+	            Gson gson = new Gson();
+	            File file = new File(FILE_PATH1);
+	            BufferedReader br = new BufferedReader(new FileReader(FILE_PATH1));
+	            Person[] contacts = gson.fromJson(br,Person[].class);
+	            List<Person> contactsList = Arrays.asList(contacts);
+	            for(Person contact: contactsList) {
+	                System.out.println("Name : " + contact.getFirstName()+" "+contact.getLastName());
+	                System.out.println("Email : " + contact.getEmailId());
+	                System.out.println("PhoneNo : " + contact.getPhoneNumber());
+	                System.out.println("Address : " + contact.getAddress());
+	                System.out.println("State : " + contact.getState());
+	                System.out.println("City : " + contact.getCity());
+	                System.out.println("Zip : " + contact.getZipCode());
+	                System.out.println("==========================");
+	            }
+	        }
+	        catch (FileNotFoundException e)
+	        {
+	            e.printStackTrace();
+	        }
+	    }
+	    private List<Person> getContentOfCsv()
+	    {
+	        try
+	        {
+	            File file = new File(FILE_PATH);
+	            Reader reader = new FileReader(file);
+	            CsvToBean<Person> csvToBean = new CsvToBeanBuilder<Person>(reader)
+	                    .withType(Person.class)
+	                    .withIgnoreLeadingWhiteSpace(true)
+	                    .build();
+	            return csvToBean.parse();
+
+	        }
+	        catch (IOException e)
+	        {
+	            e.printStackTrace();
+	        }
+	        return null;
+	    }
 	}
-
-	public void fileCreate() {
-		System.out.println("Enter the file name to creat");
-		String filename = sc.next();
-		File myfile = new File(filename);
-		try {
-			myfile.createNewFile();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			System.out.println("Unable to create this file ");
-			e.printStackTrace();
-		}
-
 	}
-
-	public void fileWrite() {
-		System.out.println("Enter the file name to in which you want to write");
-		String filename = sc.next();
-		try {
-			FileWriter fileWriter = new FileWriter(filename);
-			for (Person str : list) {
-				fileWriter.write(str + System.lineSeparator());
-			}
-			fileWriter.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
-
-	public void fileReader() {
-		System.out.println("Enter the file name to in which you want to Read");
-		String filename = sc.next();
-		File myfile = new File(filename);
-		try {
-			Scanner s = new Scanner(myfile);
-			while (s.hasNextLine()) {
-				String Line = s.nextLine();
-				System.out.println(Line);
-			}
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
-
-	public void writeToCsv() {
-		try {
-			File file = new File(FILE_PATH);
-			Writer writer = new FileWriter(file);
-			StatefulBeanToCsv<Person> beanToCsv = new StatefulBeanToCsvBuilder<Person>(writer)
-					.withQuotechar(CSVWriter.NO_QUOTE_CHARACTER).build();
-			List<Person> ContactList = new ArrayList<>();
-			contacts.entrySet().stream().map(books -> books.getKey()).map(bookNames -> {
-				return contacts.get(bookNames);
-			}).forEach(contacts -> {
-				ContactList.addAll((contacts));
-			});
-			beanToCsv.write(ContactList);
-			writer.close();
-		} catch (CsvDataTypeMismatchException e) {
-			e.printStackTrace();
-		} catch (CsvRequiredFieldEmptyException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void readFromCsvFile() {
-		Reader reader;
-		try {
-			File file = new File(FILE_PATH);
-			Reader read = new FileReader(file);
-			CsvToBean csvToBean = new CsvToBeanBuilder(read).withType(Person.class).withIgnoreLeadingWhiteSpace(true)
-					.build();
-			List<Person> contacts = csvToBean.parse();
-
-			for (Person contact : contacts) {
-				System.out.println("Name : " + contact.getFirstName() + " " + contact.getLastName());
-				System.out.println("Email : " + contact.getEmailId());
-				System.out.println("PhoneNo : " + contact.getPhoneNumber());
-				System.out.println("Address : " + contact.getAddress());
-				System.out.println("State : " + contact.getState());
-				System.out.println("City : " + contact.getCity());
-				System.out.println("Zip : " + contact.getZipCode());
-				System.out.println("==========================");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void writeToJson() {
-		List<Person> contact = getContentOfCsv();
-		Gson gson = new Gson();
-		String json = gson.toJson(contact);
-		try {
-			File file = new File(FILE_PATH1);
-			FileWriter writer = new FileWriter(file);
-			writer.write(json);
-			writer.close();
-			System.out.println("Written sucessfully");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void readFromJson() {
-		try {
-			Gson gson = new Gson();
-			File file = new File(FILE_PATH1);
-			BufferedReader br = new BufferedReader(new FileReader(FILE_PATH1));
-			Person[] contacts = gson.fromJson(br, Person[].class);
-			List<Person> contactsList = Arrays.asList(contacts);
-			for (Person contact : contactsList) {
-				System.out.println("Name : " + contact.getFirstName() + " " + contact.getLastName());
-				System.out.println("Email : " + contact.getEmailId());
-				System.out.println("PhoneNo : " + contact.getPhoneNumber());
-				System.out.println("Address : " + contact.getAddress());
-				System.out.println("State : " + contact.getState());
-				System.out.println("City : " + contact.getCity());
-				System.out.println("Zip : " + contact.getZipCode());
-				System.out.println("==========================");
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private List<Person> getContentOfCsv() {
-		try {
-			File file = new File(FILE_PATH);
-			Reader reader = new FileReader(file);
-			CsvToBean<Person> csvToBean = new CsvToBeanBuilder<Person>(reader).withType(Person.class)
-					.withIgnoreLeadingWhiteSpace(true).build();
-			return csvToBean.parse();
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-}

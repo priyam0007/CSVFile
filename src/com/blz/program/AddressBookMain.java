@@ -52,11 +52,11 @@ public class AddressBookMain {
 				addressBookService.readFromCsvFile();
 				break;
 			case 10:
-				// read from csv file.
+				// write into json file.
 				addressBookService.writeToJson();
 				break;
 			case 11:
-				// read from csv file.
+				// read from json file.
 				addressBookService.readFromJson();
 				break;
 			case 12:
